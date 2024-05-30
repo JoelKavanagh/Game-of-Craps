@@ -1,0 +1,198 @@
+/**
+ * A class to represent the Game of Craps
+ * 
+ * @author Joel Kavanagh
+ * @id number 22336168
+ * @version 2 Feb 2023
+ * @Summary: - this class is a user interactive digital version of the classic dice game, the game of craps
+ * - it uses random number generator along with user interaction to run the game a user - selected number of times and give random results based on dice throws
+ * - these dice throws are devised through rollDice, displayDice and RollAndDisplay dice methods
+ * - the playGame method implements a switch statement to check for various conditions and updates the game condition based on this
+ * - more details on playGame method listed in extensive pseudocode below
+ * - the main method is described in detailed pseudocode below
+ * - changes include counting the number of games won or lost and displaying these values at the end using local variables amountWon and amountLost
+ *
+ */
+import java.util.Random;
+import java.util.Scanner;
+public class MyGameOfCraps {
+    // create random number generator (once only) for use in method rollDice
+    private static final Random rng = new Random(); 
+
+    /*
+     * constants for the strings for won/lost  
+     * (include unicode characters for happy/sad faces see: https://unicode-table.com/en/)
+     */ 
+    private static final String WON_STR = "Congratulations ðŸ˜€, you won this game";
+    private static final String LOST_STR = "Hard luck ðŸ˜³, you lost this game";
+
+    // enumerated type with enumerators that represent the game status
+    private enum Status { WON, LOST, CONTINUE };
+
+    /* 
+     * enumerated type for names of rolls with special names replacing basic values
+     * 2 is SNAKE EYES, 3 is TREY, 11 is YO_LEVEN, 12 is BOX_CARS
+     */ 
+    private enum RollName { ZERO_NA,  
+        ONE_NA, SNAKE_EYES, TREY, FOUR, FIVE,     SIX,
+        SEVEN,  EIGHT,      NINE, TEN,  YO_LEVEN, BOX_CARS };
+
+    /**
+     * Pseudocode to describe the activities in the main method:
+     * 
+     * a new scanner object named scan is created to be used to help register user input
+     * a display message is printed outlining the class name and author
+     * a display message is printed prompting the user to input how many games they would like to play
+     * the user inputted value is assigned to the variable numberOfGames and is of type int
+     * a for loop is implemented to notify the user of what number game it is and to initiate the playGame method
+     * this for loop will start with game 1 and continue until the user has equaled the numberOfGames variable they chose beforehand
+     * a display message prompting the user to play again by entering either upper or lower case y is printed
+     * the isPlayAgain variable is created of type boolean
+     * a do while loop is implemented that will run at least once printing a display message asking the user to input y or n based on if they would like to play again
+     * the isPlayAgain variable created above is assigned the value of yes to the aforementioned question by using the scan object and converting the answer to upper case
+     * if isPlayAgain is true then a display message showing the game number will print and the game will be played
+     * While isPlayAgain is true this loop will continue
+     * When the loop ends a display message will print stating the number of games that have been played and saying bye to the user
+     * 
+     * end of the main method
+     */
+
+    public static void main( String[] args ) {        
+        Scanner scan = new Scanner(System.in);                                    //creating new Scanner object named scan
+
+        System.out.println("My Game of Craps, Author: Joel Kavanagh 22336168");   //print title of game and author with id number
+
+        //Counter controlled iteration
+        System.out.print("How many games would you like to play? ");     //print prompt to user 
+        int numberOfGames = scan.nextInt();                             //record user input in variable of type int
+        int amountWon = 0;                                              //variable to track number of games won 
+        int amountLost = 0;                                             //variable to track number of games lost
+
+        for(int game = 1; game <= numberOfGames; ++game){
+            System.out.printf("\n### Game %d ###\n", game);             //for loop to notify the user what number game it is 
+            boolean won = playGame();                                      
+            if(won) { amountWon++; }
+            else {amountLost ++; }                        
+        }
+
+        //Sentinel controlled iteration, play while user inputs "Y"
+        System.out.println("\nNow lets play again while you enter Y or y");   //display message to prompt user to input either an upper or lower case y
+        boolean isPlayAgain;                                                  //created variable of type boolean 
+
+        do{                                                                   //this will run at least once, then continuously based off if a condition is true or false
+            System.out.print("\nDo you wish to play another game [y/N]: ");   //prompts user to input whether they would like to play again
+            isPlayAgain = scan.next().toUpperCase().equals("Y");              //isPlayAgain variable created above assigned to yes using scan object and y converted to upper case 
+            if ( isPlayAgain) {                                               //if isPlayAgain is true then a display message showing the game number will print and the game will be played
+                System.out.printf("\n###Game %d ###\n", ++numberOfGames);
+                boolean won = playGame();
+                if(won) {amountWon++; }
+                else { amountLost++; }
+
+            }
+        } while ( isPlayAgain );                                              //while isPlayAgain is true this loop will repeat
+
+        System.out.printf("You played %d games. You won %d games. You lost %d games. Bye!\n", numberOfGames, amountWon, amountLost); //concluding message printed to user with added won/lost display
+    } // end main method
+
+    /**
+     * playGame method:
+     * used to implement the game of craps by making use of rollDice and rollAndDsiplayDice methods
+     * creates point and rollDice variables and maps dice sum to RollName enumerator
+     * game status is set as CONTINUE but is updated to WON or LOST based on cases of the RollName enumerator
+     * this is implemented using a switch statement which checks each enumerator case, updates game status and then breaks
+     * if none are found to be true then a default case is set which stores a point as it is neither won or lost, then breaks
+     * a while loop is used to make the play continue until the game is won or lost
+     * the conditional operator is used to print the WON_STR variable if game is won or the LOST_STR variable if the game is lost
+     * returns true if won or false if lost
+     */
+    public static boolean playGame(){
+
+        Status gameStatus = Status.CONTINUE;   // game will CONTINUE until WON or LOST
+        int point = 0;                         // point if not won or lost on first roll  
+
+        int rollDice = rollAndDisplayDice(2);  // roll two dice and sum the faces    
+
+        RollName rollName = RollName.values()[rollDice]; // Map dice sum to RollName enumerator
+        // RollName.values() returns an array of the enumerators of RollName.
+        // RollName.values()[roll] maps roll to the corresponding RollName enumerator.
+
+        // Based on the rollName enumerator value, update the game status if a won or lost value.
+        // If neither then the gameStatus remains Status.CONTINUE and the point is stored
+        switch ( rollName ) {        
+            case SEVEN: 
+            case YO_LEVEN:          
+                gameStatus = Status.WON;    // win if 7 or 11 on first roll
+                break;
+
+            case SNAKE_EYES: 
+            case TREY: 
+            case BOX_CARS: 
+                gameStatus = Status.LOST;   // lose with 2, 3 or 12 on first roll
+                break;
+
+            default:         
+                point = rollDice;           // neither won or lost, so store the point
+                System.out.printf( "The Point is %s (%d). Roll %d before 7 to win\n", 
+                    rollName.name(), point, point );
+                break;                      // this break is optional
+        } 
+
+        /*
+         * Continue playing until player either throws point (won) or seven (lost)
+         */
+        while ( gameStatus == Status.CONTINUE ) { 
+            rollDice = rollAndDisplayDice(2);
+
+            if ( rollDice == point )             // status becomes win by making point
+                gameStatus = Status.WON;
+            else if ( rollDice == 7 )            // status lose by rolling 7 before point
+                gameStatus = Status.LOST;
+        } 
+
+        /*
+         * Now if here, the player must have lost or won, 
+         *   hence display won or lost details using the WON_STR or LOST_STR
+         */
+        System.out.println(gameStatus == Status.WON ? WON_STR : LOST_STR);
+        return ( gameStatus == Status.WON );   // return true if won or false if lost
+    } // end of method playGame
+
+    /**
+     * Roll requested number of dice and store in an array with sum
+     * @param numberDice    the number of dice to role
+     * @return an array where [0] element is the sum followed by individual rolls
+     */
+    private static int[] rollDice(int numberDice) {
+        int[] diceRoll = new int[numberDice+1];
+
+        for (int i=1; i < diceRoll.length; i++) {
+            diceRoll[i] = rng.nextInt( 6 ) + 1; 
+            diceRoll[0] += diceRoll[i]; 
+        }
+
+        return diceRoll; // return sum of dice
+    } // end method rollDice
+
+    /**
+     * Display sum of dice rolls and the dice values
+     * @param diceArray  array with total in first element and then individual dice values
+     */
+    private static void displayDice(int[] diceArray) {
+        System.out.printf("Rolled %2d  Dice (", diceArray[0]);
+        for (int i=1; i < diceArray.length; i++) {
+            System.out.printf("%s %d", (i>1) ? "," : "", diceArray[i]);
+        }
+        System.out.println( " )" );
+    } // end method displayDice
+
+    /**
+     * Roll requested number of dice and display rolls
+     * @param numberDice    the number of dice to role
+     * @return sum of dice rolled
+     */
+    private static int rollAndDisplayDice(int numberDice) {
+        int[] rolledDice = rollDice(numberDice);
+        displayDice(rolledDice);
+        return rolledDice[0];    
+    } // end method rollAndDisplayDice
+} // end class GameOfCraps
